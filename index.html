@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Love You</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a0b1c 0%, #09030a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 6.5rem);
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 
+                0 0 10px #ff2a85,
+                0 0 25px #ff2a85,
+                0 0 50px #ff0055,
+                0 0 90px #ff0055;
+            animation: pulse 2.5s infinite ease-in-out;
+        }
+
+        p {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        #secret-btn {
+            pointer-events: auto;
+            margin-top: 32px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #fff;
+            background: rgba(255, 42, 133, 0.15);
+            border: 2px solid #ff2a85;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 42, 133, 0.4), inset 0 0 10px rgba(255, 42, 133, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #secret-btn:hover {
+            background: #ff2a85;
+            box-shadow: 0 0 25px #ff2a85, 0 0 50px #ff0055;
+            transform: scale(1.05);
+        }
+
+        #secret-btn:active {
+            transform: scale(0.96);
+        }
+
+        #reply-text {
+            margin-top: 24px;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 700;
+            color: #ff99c8;
+            text-shadow: 
+                0 0 10px #ff2a85,
+                0 0 25px #ff0055;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        #reply-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 
+                    0 0 10px #ff2a85,
+                    0 0 25px #ff2a85,
+                    0 0 50px #ff0055;
+            }
+            50% {
+                transform: scale(1.04);
+                text-shadow: 
+                    0 0 15px #ff5ca1,
+                    0 0 35px #ff2a85,
+                    0 0 75px #ff0055,
+                    0 0 110px #ff0055;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="container">
+        <h1>I love you</h1>
+        <p>Click anywhere</p>
+        <button id="secret-btn">Click me</button>
+        <div id="reply-text">Good girl</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const colors = ['#ff2a85', '#ff5ca1', '#ff0055', '#ff99c8', '#ffffff'];
+        let particles = [];
+
+        class HeartParticle {
+            constructor(x, y, burst = false) {
+                this.x = x;
+                this.y = y;
+                this.size = burst ? Math.random() * 14 + 6 : Math.random() * 10 + 4;
+                this.speedX = burst ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 1.2;
+                this.speedY = burst ? (Math.random() - 0.5) * 8 : -(Math.random() * 1.5 + 0.5);
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = 1;
+                this.fade = burst ? Math.random() * 0.02 + 0.015 : Math.random() * 0.005 + 0.002;
+                this.gravity = burst ? 0.12 : 0;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.opacity -= this.fade;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.opacity);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+
+                // Draw heart shape
+                const s = this.size;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y + s / 4);
+                ctx.bezierCurveTo(this.x, this.y, this.x - s / 2, this.y, this.x - s / 2, this.y + s / 4);
+                ctx.bezierCurveTo(this.x - s / 2, this.y + s / 2, this.x, this.y + s * 0.75, this.x, this.y + s);
+                ctx.bezierCurveTo(this.x, this.y + s * 0.75, this.x + s / 2, this.y + s / 2, this.x + s / 2, this.y + s / 4);
+                ctx.bezierCurveTo(this.x + s / 2, this.y, this.x, this.y, this.x, this.y + s / 4);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Ambient floating hearts
+        function spawnAmbient() {
+            if (particles.length < 150) {
+                particles.push(new HeartParticle(Math.random() * width, height + 20, false));
+            }
+        }
+
+        // Explosion of hearts on click or tap
+        function burstHearts(e) {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            if (x !== undefined && y !== undefined) {
+                for (let i = 0; i < 30; i++) {
+                    particles.push(new HeartParticle(x, y, true));
+                }
+            }
+        }
+
+        window.addEventListener('click', burstHearts);
+        window.addEventListener('touchstart', burstHearts);
+
+        // Button interaction
+        const secretBtn = document.getElementById('secret-btn');
+        const replyText = document.getElementById('reply-text');
+
+        secretBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevents double-triggering the background click if needed, or remove this line if you want a burst on button click too
+            replyText.classList.add('visible');
+            secretBtn.style.display = 'none';
+            
+            // Trigger a celebratory heart burst right from the button's position
+            const rect = secretBtn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            for (let i = 0; i < 45; i++) {
+                particles.push(new HeartParticle(centerX, centerY, true));
+            }
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            spawnAmbient();
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].opacity <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
